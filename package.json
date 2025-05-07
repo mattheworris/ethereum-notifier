@@ -1,0 +1,16 @@
+{
+  "type": "module",
+  "name": "snowbridge-notifier",
+  "version": "1.0.0",
+  "description": "Notifier for the Snowbridge Ethereum Contract",
+  "main": "notifier.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Matthew Orris",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "ethers": "^6.14.0"
+  }
+}
