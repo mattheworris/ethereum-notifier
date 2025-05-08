@@ -13,8 +13,8 @@ A Node.js application that listens for real-time transactions (logs) to a specif
 1. **Clone the repository**:
 
    ```bash
-   git clone https://github.com/mattheworris/snowbridge-notifier.git
-   cd snowbridge-notifier
+   git clone https://github.com/mattheworris/ethereum-notifier.git
+   cd ethereum-notifier
    ```
 
 2. **Install dependencies**:
@@ -65,4 +65,3 @@ This project uses `dotenv` to load environment variables from a `.env` file.
 ## License
 
 APACHE 2.0 © Matthew Orris
-

@@ -1,15 +1,10 @@
 // notifier.mjs
 import { WebSocketProvider } from "ethers";
-import 'dotenv/config';
+import 'dotenv/config'; 
+import readline from "readline";
 
-// 1) Read your key (or full WSS URL) from the env
-//    Make sure you’ve set: export ALCHEMY_API_KEY="yY5jbI8kJWd4TykIS5Tm-dnp_2-qS8H2"
-const key = process.env.ALCHEMY_API_KEY;
-if (!key) {
-  console.error("❌ Missing ALCHEMY_API_KEY in environment");
-  process.exit(1);
-}
-const ALCHEMY_WSS = `wss://eth-sepolia.g.alchemy.com/v2/${key}`;
+// 1) Your full WSS endpoint & contract
+const ALCHEMY_WSS = `wss://eth-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`;
 const CONTRACT   = "0x9ed8b47bc3417e3bd0507adc06e56e2fa360a4e9";
 
 // Spinner frames
@@ -18,34 +13,49 @@ let idx       = 0;
 let latestRaw = "";
 let msgCount  = 0;
 
-// Draw spinner + count + raw snippet
-setInterval(() => {
+// Helper to render spinner on its own line
+function renderSpinner() {
+  readline.clearLine(process.stdout, 0);    // clear current line
+  readline.cursorTo(process.stdout, 0);     // move cursor to col 0
   process.stdout.write(
-    `\r${frames[idx++ % frames.length]} [msgs: ${msgCount}] ${latestRaw.slice(0, 60)}`
+    `${frames[idx++ % frames.length]} [msgs: ${msgCount}] ${latestRaw.slice(0, 60)}`
   );
-}, 200);
+}
 
-// Create the provider and subscribe to your contract’s logs
+// 2) Kick off the interval
+const spinnerInterval = setInterval(renderSpinner, 200);
+
+// 3) Create provider & subscribe
 const ws = new WebSocketProvider(ALCHEMY_WSS);
 
 ws.on({ address: CONTRACT }, (log) => {
-  process.stdout.clearLine(0);
-  process.stdout.cursorTo(0);
+  // 3a) Clear spinner and move down one line
+  readline.clearLine(process.stdout, 0);
+  readline.cursorTo(process.stdout, 0);
+  process.stdout.write("\n");
+
+  // 3b) Print your timestamped log
   const ts = new Date().toISOString();
   console.log(`✅ [${ts}] New tx/log:`, log);
+
+  // 3c) Immediately redraw spinner below the log
+  renderSpinner();
 });
 
 ws.on("error", (err) => {
-  process.stdout.clearLine(0);
-  process.stdout.cursorTo(0);
-  console.error("⚠️  WebSocketProvider error:", err);
+  readline.clearLine(process.stdout, 0);
+  readline.cursorTo(process.stdout, 0);
+  process.stdout.write("\n");
+  console.error("⚠️ WebSocketProvider error:", err);
+  renderSpinner();
 });
 
-// Once the socket is open, start capturing raw frames
+// 4) Hook raw frames
 ws.websocket.on("open", () => {
-  process.stdout.clearLine(0);
-  process.stdout.cursorTo(0);
+  readline.clearLine(process.stdout, 0);
+  readline.cursorTo(process.stdout, 0);
   console.log("🔗 WebSocket connected");
+  renderSpinner();
 
   ws.websocket.on("message", (data) => {
     msgCount++;
@@ -53,11 +63,12 @@ ws.websocket.on("open", () => {
   });
 
   ws.websocket.on("close", (code) => {
-    process.stdout.clearLine(0);
-    process.stdout.cursorTo(0);
+    clearInterval(spinnerInterval);
+    readline.clearLine(process.stdout, 0);
+    readline.cursorTo(process.stdout, 0);
     console.log(`🔒 WebSocket closed (code ${code})`);
   });
 });
 
-// Kickoff message
+// 5) Startup message
 console.log("🚀 Notifier started; spinning until logs land…");
